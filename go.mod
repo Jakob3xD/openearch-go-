@@ -1,4 +1,4 @@
-module github.com/Jakob3xD/opensearch-golang
+module github.com/jakob3xd/opensearch-golang
 
 go 1.20
 
