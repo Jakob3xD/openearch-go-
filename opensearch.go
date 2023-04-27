@@ -38,11 +38,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	"github.com/opensearch-project/opensearch-go/v2/opensearchtransport"
 	"github.com/opensearch-project/opensearch-go/v2/signer"
 
 	"github.com/jakob3xd/opensearch-golang/internal/version"
-	"github.com/opensearch-project/opensearch-go/v2/opensearchtransport"
 )
 
 var (
@@ -55,11 +54,10 @@ func init() {
 }
 
 const (
-	defaultURL          = "http://localhost:9200"
-	openSearch          = "opensearch"
-	unsupportedProduct  = "the client noticed that the server is not a supported distribution"
-	envOpenSearchURL    = "OPENSEARCH_URL"
-	envElasticsearchURL = "ELASTICSEARCH_URL"
+	defaultURL         = "http://localhost:9200"
+	openSearch         = "opensearch"
+	unsupportedProduct = "the client noticed that the server is not a supported distribution"
+	envOpenSearchURL   = "OPENSEARCH_URL"
 )
 
 // Version returns the package version as a string.
@@ -202,7 +200,6 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	client := &Client{Transport: tp}
-	client.API = opensearchapi.New(client)
 
 	if cfg.DiscoverNodesOnStart {
 		go client.DiscoverNodes()
@@ -213,15 +210,7 @@ func NewClient(cfg Config) (*Client, error) {
 
 func getAddressFromEnvironment() ([]string, error) {
 	fromOpenSearchEnv := addrsFromEnvironment(envOpenSearchURL)
-	fromElasticsearchEnv := addrsFromEnvironment(envElasticsearchURL)
-
-	if len(fromElasticsearchEnv) > 0 && len(fromOpenSearchEnv) > 0 {
-		return nil, fmt.Errorf("cannot create client: both %s and %s are set", envOpenSearchURL, envElasticsearchURL)
-	}
-	if len(fromOpenSearchEnv) > 0 {
-		return fromOpenSearchEnv, nil
-	}
-	return fromElasticsearchEnv, nil
+	return fromOpenSearchEnv, nil
 }
 
 // checkCompatibleInfo validates the information given by OpenSearch
