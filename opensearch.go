@@ -248,7 +248,7 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 	return c.Transport.Perform(req)
 }
 
-func (c *Client) Do(ctx context.Context, req Request) (*Response, error) {
+func (c *Client) do(ctx context.Context, req Request, dataPointer interface{}) (*http.Response, error) {
 	body, err := req.GetBody()
 	if err != nil {
 		return nil, err
@@ -286,17 +286,7 @@ func (c *Client) Do(ctx context.Context, req Request) (*Response, error) {
 		httpReq = httpReq.WithContext(ctx)
 	}
 
-	res, err := c.Perform(httpReq)
-	if err != nil {
-		return nil, err
-	}
-
-	response := Response{
-		StatusCode: res.StatusCode,
-		Body:       res.Body,
-		Header:     res.Header,
-	}
-	return &response, nil
+	return c.Perform(httpReq)
 }
 
 // Metrics returns the client metrics.
