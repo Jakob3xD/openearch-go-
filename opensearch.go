@@ -28,8 +28,10 @@ package opensearch
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -248,7 +250,7 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 	return c.Transport.Perform(req)
 }
 
-func (c *Client) do(ctx context.Context, req Request, dataPointer interface{}) (*http.Response, error) {
+func (c *Client) Do(ctx context.Context, req Request, dataPointer interface{}) (*http.Response, error) {
 	body, err := req.GetBody()
 	if err != nil {
 		return nil, err
@@ -286,7 +288,22 @@ func (c *Client) do(ctx context.Context, req Request, dataPointer interface{}) (
 		httpReq = httpReq.WithContext(ctx)
 	}
 
-	return c.Perform(httpReq)
+	resp, err := c.Perform(httpReq)
+	if err != nil {
+		return resp, err
+	}
+
+	if dataPointer != nil && resp.Body != nil {
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return resp, fmt.Errorf(fmt.Sprintf("failed to read the response body, status: %d, err: %s", resp.StatusCode, err))
+		}
+		if err := json.Unmarshal(data, dataPointer); err != nil {
+			return resp, fmt.Errorf(fmt.Sprintf("failed to parse body into the pointer, status: %d, body: %s, err: %s", resp.StatusCode, data, err))
+		}
+		return nil, nil
+	}
+	return resp, nil
 }
 
 // Metrics returns the client metrics.
