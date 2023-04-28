@@ -32,7 +32,7 @@ type catClient struct {
 func (c catClient) Indices(ctx context.Context, req *CatIndicesReq) (*CatIndicesResp, error) {
 	var data CatIndicesResp
 	req.Params.Format = "json"
-	req.Params.FilterPath = []string{}
+	req.Params.FilterPath = nil
 	_, err := c.apiClient.do(ctx, req, &data)
 	if err != nil {
 		return nil, err
