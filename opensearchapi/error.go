@@ -21,21 +21,32 @@
 
 package opensearchapi
 
-import (
-	"context"
-)
+import "fmt"
 
-type catClient struct {
-	apiClient *Client
+// Error represents the API error response.
+type Error struct {
+	Err    Err `json:"error"`
+	Status int `json:"status"`
 }
 
-func (c catClient) Indices(ctx context.Context, req *CatIndicesReq) (*CatIndicesResp, error) {
-	var data CatIndicesResp
-	req.Params.Format = "json"
-	req.Params.FilterPath = []string{}
-	_, err := c.apiClient.do(ctx, req, &data)
-	if err != nil {
-		return nil, err
-	}
-	return &data, nil
+// Err represents the error of an API error response
+type Err struct {
+	RootCause []RootCause `json:"root_cause"`
+	Type      string      `json:"type"`
+	Reason    string      `json:"reason"`
+	Index     string      `json:"index,omitempty"`
+	IndexUUID string      `json:"index_uudi,omitempty"`
+}
+
+// RootCause represents the root_cause of an API error response
+type RootCause struct {
+	Type      string `json:"type"`
+	Reason    string `json:"reason"`
+	Index     string `json:"index,omitempty"`
+	IndexUUID string `json:"index_uudi,omitempty"`
+}
+
+// Error returns a string.
+func (e Error) Error() string {
+	return fmt.Sprintf("status: %d, type: %s, reason: %s, root_cause: %s", e.Status, e.Err.Type, e.Err.Reason, e.Err.RootCause)
 }

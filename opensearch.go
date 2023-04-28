@@ -250,7 +250,7 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 	return c.Transport.Perform(req)
 }
 
-func (c *Client) Do(ctx context.Context, req Request, dataPointer interface{}) (*http.Response, error) {
+func (c *Client) Do(ctx context.Context, req Request, dataPointer interface{}) (*Response, error) {
 	body, err := req.GetBody()
 	if err != nil {
 		return nil, err
@@ -290,20 +290,27 @@ func (c *Client) Do(ctx context.Context, req Request, dataPointer interface{}) (
 
 	resp, err := c.Perform(httpReq)
 	if err != nil {
-		return resp, err
+		return nil, err
 	}
 
-	if dataPointer != nil && resp.Body != nil {
+	response := &Response{
+		StatusCode: resp.StatusCode,
+		Body:       resp.Body,
+		Header:     resp.Header,
+	}
+
+	fmt.Println(response.StatusCode)
+	if dataPointer != nil && resp.Body != nil && !response.IsError() {
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return resp, fmt.Errorf(fmt.Sprintf("failed to read the response body, status: %d, err: %s", resp.StatusCode, err))
+			return response, fmt.Errorf(fmt.Sprintf("failed to read the response body, status: %d, err: %s", resp.StatusCode, err))
 		}
 		if err := json.Unmarshal(data, dataPointer); err != nil {
-			return resp, fmt.Errorf(fmt.Sprintf("failed to parse body into the pointer, status: %d, body: %s, err: %s", resp.StatusCode, data, err))
+			return response, fmt.Errorf(fmt.Sprintf("failed to parse body into the pointer, status: %d, body: %s, err: %s", resp.StatusCode, data, err))
 		}
-		return nil, nil
 	}
-	return resp, nil
+
+	return response, nil
 }
 
 // Metrics returns the client metrics.

@@ -24,6 +24,9 @@ package opensearchapi
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,10 +44,11 @@ type Client struct {
 }
 
 func clientInit(rootClient *opensearch.Client) *Client {
-	return &Client{
+	client := &Client{
 		client: rootClient,
-		Cat:    newCatClient(rootClient),
 	}
+	client.Cat = catClient{apiClient: client}
+	return client
 }
 
 // NewClient returns a opensearchapi client
@@ -72,18 +76,30 @@ func NewDefaultClient() (*Client, error) {
 	return clientInit(rootClient), nil
 }
 
-func (c *Client) Do(ctx context.Context, req opensearch.Request) (*Response, error) {
-	resp, err := c.client.Do(ctx, req, nil)
+func (c *Client) Do(ctx context.Context, req opensearch.Request) (*opensearch.Response, error) {
+	return c.do(ctx, req, nil)
+}
+
+func (c *Client) do(ctx context.Context, req opensearch.Request, dataPointer any) (*opensearch.Response, error) {
+	resp, err := c.client.Do(ctx, req, dataPointer)
 	if err != nil {
 		return nil, err
 	}
-
-	response := Response{
-		statusCode: resp.StatusCode,
-		body:       resp.Body,
-		header:     resp.Header,
+	if resp.IsError() {
+		if resp.Body == nil {
+			return nil, fmt.Errorf(resp.Status())
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("status: %d, error: %s", resp.StatusCode, err)
+		}
+		var apiError Error
+		if err = json.Unmarshal(body, &apiError); err != nil {
+			return nil, fmt.Errorf("status: %d, error: %s", resp.StatusCode, err)
+		}
+		return nil, apiError
 	}
-	return &response, nil
+	return resp, nil
 }
 
 // formatDuration converts duration to a string in the format

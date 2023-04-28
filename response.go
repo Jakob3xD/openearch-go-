@@ -22,20 +22,18 @@
 package opensearch
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 )
 
 // Response represents the API response.
-type Response interface {
-	Status() string
-	StatusCode() int
-	Header() http.Header
-	Body() io.ReadCloser
-	Err() error
+type Response struct {
+	StatusCode int
+	Header     http.Header
+	Body       io.ReadCloser
 }
 
-/*
 // String returns the response as a string.
 func (r *Response) String() string {
 	var (
@@ -68,6 +66,7 @@ func (r *Response) IsError() bool {
 	return r.StatusCode > 299
 }
 
+/*
 // Err returns an error when the response status indicates failures.
 func (r *Response) Err() error {
 	if r.IsError() {
