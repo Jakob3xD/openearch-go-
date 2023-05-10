@@ -27,6 +27,7 @@
 package opensearch
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -299,12 +300,12 @@ func (c *Client) Do(ctx context.Context, req Request, dataPointer interface{}) (
 		Header:     resp.Header,
 	}
 
-	fmt.Println(response.StatusCode)
 	if dataPointer != nil && resp.Body != nil && !response.IsError() {
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return response, fmt.Errorf(fmt.Sprintf("failed to read the response body, status: %d, err: %s", resp.StatusCode, err))
 		}
+		response.Body = io.NopCloser(bytes.NewReader(data))
 		if err := json.Unmarshal(data, dataPointer); err != nil {
 			return response, fmt.Errorf(fmt.Sprintf("failed to parse body into the pointer, status: %d, body: %s, err: %s", resp.StatusCode, data, err))
 		}
