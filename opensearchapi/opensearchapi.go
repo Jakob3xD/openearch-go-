@@ -76,10 +76,6 @@ func NewDefaultClient() (*Client, error) {
 	return clientInit(rootClient), nil
 }
 
-func (c *Client) Do(ctx context.Context, req opensearch.Request) (*opensearch.Response, error) {
-	return c.do(ctx, req, nil)
-}
-
 func (c *Client) do(ctx context.Context, req opensearch.Request, dataPointer any) (*opensearch.Response, error) {
 	resp, err := c.client.Do(ctx, req, dataPointer)
 	if err != nil {
