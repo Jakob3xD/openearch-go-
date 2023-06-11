@@ -23,9 +23,10 @@ package opensearchapi
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
+
+	"github.com/jakob3xd/opensearch-golang/opensearchutil"
 )
 
 type CatIndicesReq struct {
@@ -34,24 +35,14 @@ type CatIndicesReq struct {
 	Params CatIndicesParams
 }
 
-func (r CatIndicesReq) GetMethod() string {
-	return "GET"
-}
-
-func (r CatIndicesReq) GetPath() string {
-	return fmt.Sprintf("%s%s", "/_cat/indices/", strings.Join(r.Index, ","))
-}
-
-func (r CatIndicesReq) GetBody() (io.Reader, error) {
-	return nil, nil
-}
-
-func (r CatIndicesReq) GetParams() map[string]string {
-	return r.Params.get()
-}
-
-func (r CatIndicesReq) GetHeader() http.Header {
-	return r.Header
+func (r CatIndicesReq) GetRequest() (*http.Request, error) {
+	return opensearchutil.BuildRequest(
+		"GET",
+		fmt.Sprintf("%s%s", "/_cat/indices/", strings.Join(r.Index, ",")),
+		nil,
+		r.Params.get(),
+		r.Header,
+	)
 }
 
 type CatIndicesResp []CatIndexResp
