@@ -252,37 +252,9 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 }
 
 func (c *Client) Do(ctx context.Context, req Request, dataPointer interface{}) (*Response, error) {
-	body, err := req.GetBody()
+	httpReq, err := req.GetRequest()
 	if err != nil {
 		return nil, err
-	}
-	httpReq, err := http.NewRequest(req.GetMethod(), req.GetPath(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(req.GetParams()) > 0 {
-		q := httpReq.URL.Query()
-		for k, v := range req.GetParams() {
-			q.Set(k, v)
-		}
-		httpReq.URL.RawQuery = q.Encode()
-	}
-
-	if body != nil {
-		httpReq.Header[headerContentType] = headerContentTypeJSON
-	}
-
-	if len(req.GetHeader()) > 0 {
-		if len(httpReq.Header) == 0 {
-			httpReq.Header = req.GetHeader()
-		} else {
-			for k, vv := range req.GetHeader() {
-				for _, v := range vv {
-					httpReq.Header.Add(k, v)
-				}
-			}
-		}
 	}
 
 	if ctx != nil {

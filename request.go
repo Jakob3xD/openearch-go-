@@ -22,22 +22,9 @@
 package opensearch
 
 import (
-	"io"
 	"net/http"
 )
 
 type Request interface {
-	GetMethod() string
-	GetPath() string
-	GetBody() (io.Reader, error)
-	GetParams() map[string]string
-	GetHeader() http.Header
+	GetRequest() (*http.Request, error)
 }
-
-const (
-	headerContentType = "Content-Type"
-)
-
-var (
-	headerContentTypeJSON = []string{"application/json"}
-)
